@@ -22,11 +22,9 @@ func main() {
 	flag.Parse()
 
 	mz_template, _ := uritemplates.Parse("https://vector.mapzen.com/osm/all/{z}/{x}/{y}.{fmt}?api_key={key}")
-	
+
 	re, _ := regexp.Compile(`/(\d+)/(\d+)/(\d+).(\w+)$`)
 
-	fmt.Println(*cache)
-	
 	handler := func(rsp http.ResponseWriter, req *http.Request) {
 
 		url := req.URL
@@ -41,25 +39,29 @@ func main() {
 
 		_, err := os.Stat(local_path)
 
-		if !os.IsNotExist(err){
+		if !os.IsNotExist(err) {
 
 			body, err := ioutil.ReadFile(local_path)
 
 			if err == nil {
+
+				// something something something headers?
+				// (20160524/thisisaaronland)
+
 				rsp.Write(body)
 				return
 			}
 
 			fmt.Println("failed to read file", local_path, err)
 		}
-		
+
 		m := re.FindStringSubmatch(path)
 
 		values := make(map[string]interface{})
 		values["z"] = m[1]
 		values["x"] = m[2]
 		values["y"] = m[3]
-		values["fmt"] = m[4]			    
+		values["fmt"] = m[4]
 		values["key"] = *apikey
 
 		source, err := mz_template.Expand(values)
@@ -86,42 +88,42 @@ func main() {
 
 		if r.StatusCode == 200 {
 
-	   		fmt.Println("caching", local_path)
-				
+			fmt.Println("caching", local_path)
+
 			go func(local_path string, body []byte) {
 
 				root := filepath.Dir(local_path)
 
 				_, err = os.Stat(root)
 
-				if os.IsNotExist(err){
-		   		   os.MkdirAll(root, 0755)
+				if os.IsNotExist(err) {
+					os.MkdirAll(root, 0755)
 				}
 
 				fh, err := os.Create(local_path)
 
 				if err != nil {
-				   fmt.Println(err)
-				   return
+					fmt.Println(err)
+					return
 				}
 
 				defer fh.Close()
 
 				fh.Write(body)
 				fh.Sync()
-				
+
 			}(local_path, body)
 		}
 
 		// HOW DO WE cache headers?
 		// (20160524/thisisaaronland)
-		
+
 		for k, v := range r.Header {
 			for _, vv := range v {
 				rsp.Header().Add(k, vv)
 			}
 		}
-		
+
 		rsp.Write(body)
 		return
 	}
