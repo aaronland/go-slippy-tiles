@@ -21,9 +21,12 @@ func main() {
 
 	flag.Parse()
 
+	config := make(map[string]*uritemplates.UriTemplate)
+	
 	mz_template, _ := uritemplates.Parse("https://vector.mapzen.com/osm/all/{z}/{x}/{y}.{fmt}?api_key={key}")
-
-	re, _ := regexp.Compile(`/(\d+)/(\d+)/(\d+).(\w+)$`)
+	config["osm"] = mz_template
+	
+	re, _ := regexp.Compile(`/([^/]+)/(\d+)/(\d+)/(\d+).(\w+)$`)
 
 	handler := func(rsp http.ResponseWriter, req *http.Request) {
 
@@ -36,7 +39,7 @@ func main() {
 		}
 
 		local_path := filepath.Join(*cache, path)
-
+		
 		_, err := os.Stat(local_path)
 
 		if !os.IsNotExist(err) {
@@ -56,15 +59,23 @@ func main() {
 		}
 
 		m := re.FindStringSubmatch(path)
+		layer := m[1]
 
+		template, ok := config[layer]
+
+		if !ok {
+			http.Error(rsp, "404 Not found", http.StatusNotFound)
+			return
+		}
+		
 		values := make(map[string]interface{})
-		values["z"] = m[1]
-		values["x"] = m[2]
-		values["y"] = m[3]
-		values["fmt"] = m[4]
-		values["key"] = *apikey
+		values["z"] = m[2]
+		values["x"] = m[3]
+		values["y"] = m[4]
+		values["fmt"] = m[5]
+		values["key"] = *apikey	// this needs to come out of a config thingy
 
-		source, err := mz_template.Expand(values)
+		source, err := template.Expand(values)
 
 		if err != nil {
 			http.Error(rsp, "500 Server Error", http.StatusInternalServerError)
