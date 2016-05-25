@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -13,27 +14,18 @@ import (
 	"regexp"
 )
 
-type ProxyConfig map[string]ProxyProvider
-
-func NewProxyConfig() ProxyConfig {
-	c := make(map[string]ProxyProvider)
-	return c
-}
-
-func (c ProxyConfig) AddProvider(layer string, p ProxyProvider) error {
-
-	_, ok := c[layer]
-
-	if ok {
-		return errors.New("layer already defined")
+type ProxyConfig struct {
+	Cache struct {
+		Name string
+		Path string
 	}
 
-	c[layer] = p
-	return nil
+	Layers map[string]ProxyProvider
 }
 
 type ProxyProvider struct {
-	URL string
+	URL     string
+	Formats []string
 }
 
 func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
@@ -45,15 +37,36 @@ func main() {
 
 	var host = flag.String("host", "localhost", "...")
 	var port = flag.Int("port", 9191, "...")
-	var cache = flag.String("cache", "", "...")
-	var apikey = flag.String("api-key", "", "...")
+	var cfg = flag.String("config", "", "...")
 
 	flag.Parse()
 
-	config := make(map[string]*uritemplates.UriTemplate)
+	body, err := ioutil.ReadFile(*cfg)
 
-	mz_template, _ := uritemplates.Parse("https://vector.mapzen.com/osm/all/{z}/{x}/{y}.{fmt}?api_key={key}")
-	config["osm"] = mz_template
+	if err != nil {
+		panic(err)
+	}
+
+	config := ProxyConfig{}
+	err = json.Unmarshal(body, &config)
+
+	if err != nil {
+		panic(err)
+	}
+
+	cache := config.Cache
+
+	if cache.Name != "Disk" {
+		err = errors.New("unsupported cache type")
+		panic(err)
+	}
+
+	_, err = os.Stat(cache.Path)
+
+	if os.IsNotExist(err) {
+		err = errors.New("invalid cache path")
+		panic(err)
+	}
 
 	re, _ := regexp.Compile(`/([^/]+)/(\d+)/(\d+)/(\d+).(\w+)$`)
 
@@ -67,7 +80,7 @@ func main() {
 			return
 		}
 
-		local_path := filepath.Join(*cache, path)
+		local_path := filepath.Join(cache.Path, path)
 
 		_, err := os.Stat(local_path)
 
@@ -90,10 +103,17 @@ func main() {
 		m := re.FindStringSubmatch(path)
 		layer := m[1]
 
-		template, ok := config[layer]
+		provider, ok := config.Layers[layer]
 
 		if !ok {
 			http.Error(rsp, "404 Not found", http.StatusNotFound)
+			return
+		}
+
+		template, err := provider.Template()
+
+		if err != nil {
+			http.Error(rsp, "500 Server Error", http.StatusInternalServerError)
 			return
 		}
 
@@ -101,8 +121,26 @@ func main() {
 		values["z"] = m[2]
 		values["x"] = m[3]
 		values["y"] = m[4]
-		values["fmt"] = m[5]
-		values["key"] = *apikey // this needs to come out of a config thingy
+
+		if len(provider.Formats) >= 1 {
+
+			format := m[5]
+			ok := false
+
+			for _, f := range provider.Formats {
+				if format == f {
+					ok = true
+					break
+				}
+			}
+
+			if !ok {
+				http.Error(rsp, "404 Not found", http.StatusNotFound)
+				return
+			}
+
+			values["fmt"] = format
+		}
 
 		source, err := template.Expand(values)
 
@@ -128,7 +166,7 @@ func main() {
 
 		if r.StatusCode == 200 {
 
-			fmt.Println("caching", local_path)
+			// fmt.Println("caching", local_path)
 
 			go func(local_path string, body []byte) {
 
@@ -171,7 +209,7 @@ func main() {
 	proxyHandler := http.HandlerFunc(handler)
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
-	err := http.ListenAndServe(endpoint, proxyHandler)
+	err = http.ListenAndServe(endpoint, proxyHandler)
 
 	if err != nil {
 		panic(err)
