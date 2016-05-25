@@ -37,6 +37,7 @@ func main() {
 
 	var host = flag.String("host", "localhost", "...")
 	var port = flag.Int("port", 9191, "...")
+	var cors = flag.Bool("cors", false, "Enable CORS headers")
 	var cfg = flag.String("config", "", "...")
 
 	flag.Parse()
@@ -92,6 +93,10 @@ func main() {
 
 				// something something something headers?
 				// (20160524/thisisaaronland)
+
+				if *cors {
+					rsp.Header().Set("Access-Control-Allow-Origin", "*")
+				}
 
 				rsp.Write(body)
 				return
@@ -196,10 +201,16 @@ func main() {
 		// HOW DO WE cache headers?
 		// (20160524/thisisaaronland)
 
-		for k, v := range r.Header {
-			for _, vv := range v {
-				rsp.Header().Add(k, vv)
+		/*
+			for k, v := range r.Header {
+				for _, vv := range v {
+					rsp.Header().Add(k, vv)
+				}
 			}
+		*/
+
+		if *cors {
+			rsp.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
 		rsp.Write(body)
