@@ -31,7 +31,7 @@ HIT cache/osm/all/16/10493/25368.mvt
 }
 ```
 
-## mapzen-slippy-map
+### mapzen-slippy-map
 
 This does not happen like-magic yet...
 
@@ -42,3 +42,7 @@ var url = cfg.url.replace('https://vector.mapzen.com', 'http://localhost:9191');
 cfg.url = url;
 s.setDataSource('osm', cfg);
 ```
+
+## See also
+
+* https://github.com/thisisaaronland/mapzen-slippy-map
