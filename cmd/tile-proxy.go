@@ -37,7 +37,8 @@ func main() {
 
 	var host = flag.String("host", "localhost", "...")
 	var port = flag.Int("port", 9191, "...")
-	var cors = flag.Bool("cors", false, "Enable CORS headers")
+	var cors = flag.Bool("cors", false, "...")
+	var refresh = flag.Bool("refresh", false, "...")
 	var cfg = flag.String("config", "", "...")
 
 	flag.Parse()
@@ -69,12 +70,13 @@ func main() {
 		panic(err)
 	}
 
-	re, _ := regexp.Compile(`/([^/]+)/(\d+)/(\d+)/(\d+).(\w+)$`)
+	re, _ := regexp.Compile(`/(.*)/(\d+)/(\d+)/(\d+).(\w+)$`)
 
 	handler := func(rsp http.ResponseWriter, req *http.Request) {
 
 		url := req.URL
 		path := url.Path
+		query := url.RawQuery
 
 		if !re.MatchString(path) {
 			http.Error(rsp, "404 Not found", http.StatusNotFound)
@@ -83,26 +85,30 @@ func main() {
 
 		local_path := filepath.Join(cache.Path, path)
 
-		_, err := os.Stat(local_path)
+		if !*refresh {
+			_, err := os.Stat(local_path)
 
-		if !os.IsNotExist(err) {
+			if !os.IsNotExist(err) {
 
-			body, err := ioutil.ReadFile(local_path)
+				body, err := ioutil.ReadFile(local_path)
 
-			if err == nil {
+				if err == nil {
 
-				// something something something headers?
-				// (20160524/thisisaaronland)
+					fmt.Println("HIT", local_path)
 
-				if *cors {
-					rsp.Header().Set("Access-Control-Allow-Origin", "*")
+					// something something something headers?
+					// (20160524/thisisaaronland)
+
+					if *cors {
+						rsp.Header().Set("Access-Control-Allow-Origin", "*")
+					}
+
+					rsp.Write(body)
+					return
 				}
 
-				rsp.Write(body)
-				return
+				fmt.Println("failed to read file", local_path, err)
 			}
-
-			fmt.Println("failed to read file", local_path, err)
 		}
 
 		m := re.FindStringSubmatch(path)
@@ -153,6 +159,12 @@ func main() {
 			http.Error(rsp, "500 Server Error", http.StatusInternalServerError)
 			return
 		}
+
+		if query != "" {
+			source = source + "?" + query
+		}
+
+		fmt.Println("FETCH", source)
 
 		client := &http.Client{}
 		r, err := client.Get(source)
