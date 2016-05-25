@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/jtacoma/uritemplates"
@@ -12,6 +13,34 @@ import (
 	"regexp"
 )
 
+type ProxyConfig map[string]ProxyProvider
+
+func NewProxyConfig() ProxyConfig {
+	c := make(map[string]ProxyProvider)
+	return c
+}
+
+func (c ProxyConfig) AddProvider(layer string, p ProxyProvider) error {
+
+	_, ok := c[layer]
+
+	if ok {
+		return errors.New("layer already defined")
+	}
+
+	c[layer] = p
+	return nil
+}
+
+type ProxyProvider struct {
+	URL string
+}
+
+func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
+	template, err := uritemplates.Parse(p.URL)
+	return template, err
+}
+
 func main() {
 
 	var host = flag.String("host", "localhost", "...")
@@ -22,10 +51,10 @@ func main() {
 	flag.Parse()
 
 	config := make(map[string]*uritemplates.UriTemplate)
-	
+
 	mz_template, _ := uritemplates.Parse("https://vector.mapzen.com/osm/all/{z}/{x}/{y}.{fmt}?api_key={key}")
 	config["osm"] = mz_template
-	
+
 	re, _ := regexp.Compile(`/([^/]+)/(\d+)/(\d+)/(\d+).(\w+)$`)
 
 	handler := func(rsp http.ResponseWriter, req *http.Request) {
@@ -39,7 +68,7 @@ func main() {
 		}
 
 		local_path := filepath.Join(*cache, path)
-		
+
 		_, err := os.Stat(local_path)
 
 		if !os.IsNotExist(err) {
@@ -67,13 +96,13 @@ func main() {
 			http.Error(rsp, "404 Not found", http.StatusNotFound)
 			return
 		}
-		
+
 		values := make(map[string]interface{})
 		values["z"] = m[2]
 		values["x"] = m[3]
 		values["y"] = m[4]
 		values["fmt"] = m[5]
-		values["key"] = *apikey	// this needs to come out of a config thingy
+		values["key"] = *apikey // this needs to come out of a config thingy
 
 		source, err := template.Expand(values)
 

@@ -23,5 +23,4 @@ vendor: rmdeps deps
 	find vendor -name '.git' -print -type d -exec rm -rf {} +
 
 fmt:
-	go fmt *.go
 	go fmt cmd/*.go
