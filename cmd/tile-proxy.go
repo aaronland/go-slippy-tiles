@@ -129,6 +129,7 @@ func main() {
 	var host = flag.String("host", "localhost", "...")
 	var port = flag.Int("port", 9191, "...")
 	var cors = flag.Bool("cors", false, "...")
+	var tls = flag.Bool("tls", false, "...")
 	var refresh = flag.Bool("refresh", false, "...")
 	var cfg = flag.String("config", "", "...")
 
@@ -323,10 +324,13 @@ func main() {
 	proxyHandler := http.HandlerFunc(handler)
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
-	err = http.ListenAndServe(endpoint, proxyHandler)
 
-	// cert, key := generateCert(*host)
-	// http.ListenAndServeTLS(*endpoint, cert, key, proxyHandler)
+	if *tls {
+		cert, key := generateCert(*host)
+		err = http.ListenAndServeTLS(endpoint, cert, key, proxyHandler)
+	} else {
+		err = http.ListenAndServe(endpoint, proxyHandler)
+	}
 
 	if err != nil {
 		panic(err)
