@@ -1,17 +1,26 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/jtacoma/uritemplates"
 	"io"
 	"io/ioutil"
+	"log"
+	"math/big"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 )
 
 type ProxyConfig struct {
@@ -31,6 +40,88 @@ type ProxyProvider struct {
 func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
 	template, err := uritemplates.Parse(p.URL)
 	return template, err
+}
+
+// https://github.com/mattrobenolt/https
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func generateCert(host string) (string, string) {
+	var err error
+
+	dir := "/tmp/https-certs/" + host + "/"
+	certPath := dir + "cert.pem"
+	keyPath := dir + "key.pem"
+
+	if exists(certPath) && exists(keyPath) {
+		return certPath, keyPath
+	}
+
+	log.Println("Generating new certificates...")
+
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Fatalf("failed to generate private key: %s", err)
+	}
+
+	notBefore := time.Now()
+	notAfter := notBefore.Add(365 * 24 * time.Hour)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		log.Fatalf("failed to generate serial number: %s", err)
+	}
+
+	template := x509.Certificate{
+		IsCA: true,
+
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		template.IPAddresses = append(template.IPAddresses, ip)
+	} else {
+		template.DNSNames = append(template.DNSNames, host)
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		log.Fatalf("Failed to create certificate: %s", err)
+	}
+
+	err = os.MkdirAll(dir, 0700)
+	if err != nil {
+		log.Fatalf("Failed to write certificates: %s", err)
+	}
+
+	certOut, err := os.Create(certPath)
+	if err != nil {
+		log.Fatalf("failed to open cert.pem for writing: %s", err)
+	}
+	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	certOut.Close()
+
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Fatalf("failed to open key.pem for writing: %s", err)
+	}
+
+	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
+	keyOut.Close()
+	return certPath, keyPath
 }
 
 func main() {
@@ -233,6 +324,9 @@ func main() {
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
 	err = http.ListenAndServe(endpoint, proxyHandler)
+
+	// cert, key := generateCert(*host)
+	// http.ListenAndServeTLS(*endpoint, cert, key, proxyHandler)
 
 	if err != nil {
 		panic(err)
