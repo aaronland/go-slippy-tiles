@@ -6,7 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/jtacoma/uritemplates"
-	"github.com/whosonfirst/go-httpony"
+	"github.com/whosonfirst/go-httpony/tls"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -39,7 +39,7 @@ func main() {
 	var host = flag.String("host", "localhost", "...")
 	var port = flag.Int("port", 9191, "...")
 	var cors = flag.Bool("cors", false, "...")
-	var no_tls = flag.Bool("no-tls", false, "...")
+	var tls = flag.Bool("tls", false, "...") // because CA warnings in browsers...
 	var tls_cert = flag.String("tls-cert", "", "...")
 	var tls_key = flag.String("tls-key", "", "...")
 	var refresh = flag.Bool("refresh", false, "...")
@@ -187,8 +187,6 @@ func main() {
 
 		if r.StatusCode == 200 {
 
-			// fmt.Println("caching", local_path)
-
 			go func(local_path string, body []byte) {
 
 				root := filepath.Dir(local_path)
@@ -214,17 +212,6 @@ func main() {
 			}(local_path, body)
 		}
 
-		// HOW DO WE cache headers?
-		// (20160524/thisisaaronland)
-
-		/*
-			for k, v := range r.Header {
-				for _, vv := range v {
-					rsp.Header().Add(k, vv)
-				}
-			}
-		*/
-
 		if *cors {
 			rsp.Header().Set("Access-Control-Allow-Origin", "*")
 		}
@@ -237,10 +224,7 @@ func main() {
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
 
-	if *no_tls {
-
-		err = http.ListenAndServe(endpoint, proxyHandler)
-	} else {
+	if *tls {
 
 		var cert string
 		var key string
@@ -258,10 +242,16 @@ func main() {
 			key = *tls_key
 		}
 
+		fmt.Printf("start and listen for requests at https://%s\n", endpoint)
 		err = http.ListenAndServeTLS(endpoint, cert, key, proxyHandler)
+		
+	} else {
+	
+		fmt.Printf("start and listen for requests at http://%s\n", endpoint)
+		err = http.ListenAndServe(endpoint, proxyHandler)
 	}
 
-	if err != nil {
+	if err != nil {	
 		panic(err)
 	}
 
