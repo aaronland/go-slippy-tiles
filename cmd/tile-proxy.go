@@ -130,6 +130,8 @@ func main() {
 	var port = flag.Int("port", 9191, "...")
 	var cors = flag.Bool("cors", false, "...")
 	var tls = flag.Bool("tls", false, "...")
+	var tls_cert = flag.String("tls-cert", "", "...")
+	var tls_key = flag.String("tls-key", "", "...")	
 	var refresh = flag.Bool("refresh", false, "...")
 	var cfg = flag.String("config", "", "...")
 
