@@ -13,6 +13,7 @@ build:	rmdeps bin
 
 deps:
 	@GOPATH=$(shell pwd) go get -u "github.com/jtacoma/uritemplates"
+	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-httpony"
 
 bin:	self
 	@GOPATH=$(GOPATH) go build -o bin/tile-proxy cmd/tile-proxy.go
