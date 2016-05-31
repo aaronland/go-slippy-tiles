@@ -231,7 +231,13 @@ func main() {
 
 		if *tls_cert == "" && *tls_key == "" {
 
-			cert, key, err = httpony.GenerateTLSCert(*host)
+		   	root, err := httpony.EnsureTLSRoot()
+
+			if err != nil {
+				panic(err)
+			}
+
+			cert, key, err = httpony.GenerateTLSCert(*host, root)
 
 			if err != nil {
 				panic(err)
