@@ -34,7 +34,7 @@ func NewProxyProvider(config slippytiles.Config) (*ProxyProvider, error){
 }
 
 func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
-	template, err := uritemplates.Parse(p.config.Layer.URL)
+	template, err := uritemplates.Parse(p.config.Layers.URL)
 	return template, err
 }
 
@@ -60,7 +60,8 @@ func (p ProxyProvider) Handler() http.Handler {
 		/*
 		if !*refresh {
 
-			body, err := p.Cache.Get(path)
+		   	cache := p.Cache()
+			body, err := cache.Get(path)
 
 			if err == nil {
 
@@ -145,7 +146,8 @@ func (p ProxyProvider) Handler() http.Handler {
 		}
 
 		if r.StatusCode == 200 {
-			go p.Cache.Set(path, body)
+		   	cache := p.Cache()
+			go cache.Set(path, body)
 		}
 
 		rsp.Header().Set("Access-Control-Allow-Origin", "*")
