@@ -36,10 +36,18 @@ func (c *DiskCache) Get(rel_path string) ([]byte, error) {
 	_, err := os.Stat(abs_path)
 
 	if os.IsNotExist(err) {
+		// fmt.Println(err)
 		return nil, err
 	}
 
-	return ioutil.ReadFile(abs_path)
+	body, err := ioutil.ReadFile(abs_path)
+
+	if err != nil {
+		// fmt.Println(err)
+		return nil, err
+	}
+
+	return body, nil
 }
 
 func (c *DiskCache) Set(rel_path string, body []byte) error {

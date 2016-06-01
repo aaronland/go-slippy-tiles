@@ -51,23 +51,18 @@ func (p ProxyProvider) Handler() http.Handler {
 			return
 		}
 
-		/*
-			if !*refresh {
+		cache := p.Cache()
+		body, err := cache.Get(path)
 
-			   	cache := p.Cache()
-				body, err := cache.Get(path)
+		if err == nil {
 
-				if err == nil {
+			//if *cors {
+			rsp.Header().Set("Access-Control-Allow-Origin", "*")
+			//}
 
-					if *cors {
-					   rsp.Header().Set("Access-Control-Allow-Origin", "*")
-					}
-
-					rsp.Write(body)
-					return
-				}
-			}
-		*/
+			rsp.Write(body)
+			return
+		}
 
 		m := re.FindStringSubmatch(path)
 		layer_name := m[1]
@@ -132,7 +127,7 @@ func (p ProxyProvider) Handler() http.Handler {
 			return
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err = ioutil.ReadAll(r.Body)
 
 		if err != nil {
 			http.Error(rsp, "500 Server Error", http.StatusInternalServerError)
