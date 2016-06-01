@@ -3,7 +3,8 @@ package providers
 import (
        "fmt"
        "github.com/jtacoma/uritemplates"
-       "github.com/thisisaaronland/go-slippy-tiles"       
+       "github.com/thisisaaronland/go-slippy-tiles"
+       "github.com/thisisaaronland/go-slippy-tiles/caches"
        "io"
        "io/ioutil"
        "net/http"
@@ -12,16 +13,20 @@ import (
 
 type ProxyProvider struct {
         slippytiles.Provider
-	URL     string
-	Formats []string
-	cache *slippytiles.Cache
+	config	slippytiles.Config
+	cache slippytiles.Cache
 }
 
-func NewProxyProvider(url string, formats []string, cache *slippytiles.Cache) (*ProxyProvider, error){
+func NewProxyProvider(config slippytiles.Config) (*ProxyProvider, error){
 
+     cache, err := caches.NewCacheFromConfig(config)
+
+     if err != nil {
+     	return nil, err
+     }
+     
      p := ProxyProvider{
-       URL: url,
-       Formats: formats,
+       config: config,
        cache: cache,
      }
 
@@ -29,11 +34,11 @@ func NewProxyProvider(url string, formats []string, cache *slippytiles.Cache) (*
 }
 
 func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
-	template, err := uritemplates.Parse(p.URL)
+	template, err := uritemplates.Parse(p.config.Layer.URL)
 	return template, err
 }
 
-func (p ProxyProvider) Cache() *slippytiles.Cache {
+func (p ProxyProvider) Cache() slippytiles.Cache {
      return p.cache
 }
 
@@ -72,14 +77,14 @@ func (p ProxyProvider) Handler() http.Handler {
 		m := re.FindStringSubmatch(path)
 		layer := m[1]
 
-		provider, ok := config.Layers[layer]
+		provider, ok := p.config.Layers[layer]
 
 		if !ok {
 			http.Error(rsp, "404 Not found", http.StatusNotFound)
 			return
 		}
 
-		template, err := provider.Template()
+		template, err := p.Template()
 
 		if err != nil {
 			http.Error(rsp, "500 Server Error", http.StatusInternalServerError)
@@ -91,7 +96,7 @@ func (p ProxyProvider) Handler() http.Handler {
 		values["x"] = m[3]
 		values["y"] = m[4]
 
-		if len(provider.Formats) >= 1 {
+		if len(provider.config.Formats) >= 1 {
 
 			format := m[5]
 			ok := false

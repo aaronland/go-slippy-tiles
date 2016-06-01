@@ -13,8 +13,9 @@ type DiskCache struct {
      root string
 }
 
-func NewDiskCache(root string) (*DiskCache, error) {
+func NewDiskCache(config slippytiles.Config) (*DiskCache, error) {
 
+     root := config.Cache.Path
      _, err := os.Stat(root)
 
      if os.IsNotExist(err) {

@@ -13,18 +13,6 @@ import (
 	"os"
 )
 
-type Config struct {
-	Cache struct {
-		Name string
-		Path string
-	}
-
-	Layers struct {
-		URL     string
-		Formats []string
-	}
-}
-
 func main() {
 
 	var host = flag.String("host", "localhost", "...")
@@ -44,34 +32,23 @@ func main() {
 		panic(err)
 	}
 
-	config := Config{}
+	config := slippytiles.Config{}
 	err = json.Unmarshal(body, &config)
 
 	if err != nil {
 		panic(err)
 	}
 
-	cache := config.Cache
-
-	if cache.Name != "Disk" {
-		err = errors.New("unsupported cache type")
-		panic(err)
-	}
-
+	/*
 	_, err = os.Stat(cache.Path)
 
 	if os.IsNotExist(err) {
 		err = errors.New("invalid cache path")
 		panic(err)
 	}
-
-	cache, err := caches.NewDiskCache()
-
-	if err != nil {
-	   panic(err)
-	}
-
-	provider, err := providers.NewProxyProvider()
+	*/
+	
+	provider, err := providers.NewProxyProvider(config)
 
 	if err != nil {
 	   panic(err)
