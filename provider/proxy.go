@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"fmt"
 	"github.com/thisisaaronland/go-slippy-tiles"
 	"github.com/thisisaaronland/go-slippy-tiles/cache"
 	"io"
@@ -116,8 +115,6 @@ func (p ProxyProvider) Handler() http.Handler {
 		if query != "" {
 			source = source + "?" + query
 		}
-
-		fmt.Println("FETCH", source)
 
 		client := &http.Client{}
 		r, err := client.Get(source)

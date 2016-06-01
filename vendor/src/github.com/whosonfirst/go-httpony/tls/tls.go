@@ -1,4 +1,4 @@
-package httpony
+package tls
 
 import (
 	"crypto/rand"
