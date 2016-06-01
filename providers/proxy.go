@@ -1,18 +1,31 @@
-package proxy
+package providers
 
 import (
+       "fmt"
        "github.com/jtacoma/uritemplates"
+       "github.com/thisisaaronland/go-slippy-tiles"       
        "io"
        "io/ioutil"
        "net/http"
-       "os"
-       "path/filepath"
        "regexp"
        )
 
 type ProxyProvider struct {
+        slippytiles.Provider
 	URL     string
 	Formats []string
+	cache *slippytiles.Cache
+}
+
+func NewProxyProvider(url string, formats []string, cache *slippytiles.Cache) (*ProxyProvider, error){
+
+     p := ProxyProvider{
+       URL: url,
+       Formats: formats,
+       cache: cache,
+     }
+
+     return &p, nil
 }
 
 func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
@@ -20,11 +33,9 @@ func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
 	return template, err
 }
 
-/*
-func (p ProxyProvider) Cache() tiles.Cache {
+func (p ProxyProvider) Cache() *slippytiles.Cache {
      return p.cache
 }
-*/
 
 func (p ProxyProvider) Handler() http.Handler {
 
@@ -41,6 +52,7 @@ func (p ProxyProvider) Handler() http.Handler {
 			return
 		}
 
+		/*
 		if !*refresh {
 
 			body, err := p.Cache.Get(path)
@@ -55,7 +67,8 @@ func (p ProxyProvider) Handler() http.Handler {
 				return
 			}
 		}
-
+		*/
+		
 		m := re.FindStringSubmatch(path)
 		layer := m[1]
 
@@ -130,9 +143,7 @@ func (p ProxyProvider) Handler() http.Handler {
 			go p.Cache.Set(path, body)
 		}
 
-		if *cors {
-			rsp.Header().Set("Access-Control-Allow-Origin", "*")
-		}
+		rsp.Header().Set("Access-Control-Allow-Origin", "*")
 
 		rsp.Write(body)
 		return

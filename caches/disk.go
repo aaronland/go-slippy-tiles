@@ -1,18 +1,19 @@
-package cache
+package caches
 
 import (
-       "github.com/thisisaaronland/go-tileproxy"
+       "github.com/thisisaaronland/go-slippy-tiles"
        "io/ioutil"
        "os"
        "path"
+       "path/filepath"
 )
 
 type DiskCache struct {
-     tiles.Cache
+     slippytiles.Cache
      root string
 }
 
-func NewDiskCache(root string) (DiskCache, error) {
+func NewDiskCache(root string) (*DiskCache, error) {
 
      _, err := os.Stat(root)
 
@@ -24,12 +25,12 @@ func NewDiskCache(root string) (DiskCache, error) {
        root: root,
      }
 
-     return c, nil
+     return &c, nil
 }
 
-func (c DiskCache) Get(path string, body []byte) error {
+func (c *DiskCache) Get(rel_path string) ([]byte, error) {
 
-     abs_path := path.Join(c.root, path)
+     abs_path := path.Join(c.root, rel_path)
 
      _, err := os.Stat(abs_path)
 
@@ -41,13 +42,13 @@ func (c DiskCache) Get(path string, body []byte) error {
 }
 
 
-func (c DiskCache) Set(path string, body []byte) error {
+func (c *DiskCache) Set(rel_path string, body []byte) error {
 
-     abs_path := path.Join(c.root, path)
+     abs_path := path.Join(c.root, rel_path)
 
      root := filepath.Dir(abs_path)
 
-     _, err = os.Stat(root)
+     _, err := os.Stat(root)
 
      if os.IsNotExist(err) {
      	os.MkdirAll(root, 0755)
@@ -66,9 +67,9 @@ func (c DiskCache) Set(path string, body []byte) error {
      return nil
 }
 
-func (c DiskCache) Unset(path string) error {
+func (c *DiskCache) Unset(rel_path string) error {
 
-     abs_path := path.Join(c.root, path)
+     abs_path := path.Join(c.root, rel_path)
 
      _, err := os.Stat(abs_path)
 
