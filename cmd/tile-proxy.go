@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/thisisaaronland/go-slippy-tiles"
 	"github.com/thisisaaronland/go-slippy-tiles/provider"
-	"github.com/thisisaaronland/go-slippy-tiles/cache"	
-	"github.com/whosonfirst/go-httpony/tls"	
+	"github.com/whosonfirst/go-httpony/tls"
+	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -17,11 +16,11 @@ func main() {
 
 	var host = flag.String("host", "localhost", "...")
 	var port = flag.Int("port", 9191, "...")
-	var cors = flag.Bool("cors", false, "...")
+	// var cors = flag.Bool("cors", false, "...")
 	var tls = flag.Bool("tls", false, "...") // because CA warnings in browsers...
 	var tls_cert = flag.String("tls-cert", "", "...")
 	var tls_key = flag.String("tls-key", "", "...")
-	var refresh = flag.Bool("refresh", false, "...")
+	// var refresh = flag.Bool("refresh", false, "...")
 	var cfg = flag.String("config", "", "...")
 
 	flag.Parse()
@@ -38,16 +37,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
-	provider, err := provider.NewProxyProvider(config)
+
+	provider, err := provider.NewProviderFromConfig(config)
 
 	if err != nil {
-	   panic(err)
+		panic(err)
 	}
 
-	handler := provider.Handler()
-
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
+	handler := provider.Handler()
 
 	if *tls {
 
@@ -56,7 +54,7 @@ func main() {
 
 		if *tls_cert == "" && *tls_key == "" {
 
-		   	root, err := httpony.EnsureTLSRoot()
+			root, err := httpony.EnsureTLSRoot()
 
 			if err != nil {
 				panic(err)
@@ -75,14 +73,14 @@ func main() {
 
 		fmt.Printf("start and listen for requests at https://%s\n", endpoint)
 		err = http.ListenAndServeTLS(endpoint, cert, key, handler)
-		
+
 	} else {
-	
+
 		fmt.Printf("start and listen for requests at http://%s\n", endpoint)
 		err = http.ListenAndServe(endpoint, handler)
 	}
 
-	if err != nil {	
+	if err != nil {
 		panic(err)
 	}
 

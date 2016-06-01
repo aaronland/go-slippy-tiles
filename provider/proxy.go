@@ -1,53 +1,47 @@
 package provider
 
 import (
-       "fmt"
-       "github.com/jtacoma/uritemplates"
-       "github.com/thisisaaronland/go-slippy-tiles"
-       "github.com/thisisaaronland/go-slippy-tiles/cache"
-       "io"
-       "io/ioutil"
-       "net/http"
-       "regexp"
-       )
+	"fmt"
+	"github.com/thisisaaronland/go-slippy-tiles"
+	"github.com/thisisaaronland/go-slippy-tiles/cache"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+)
 
 type ProxyProvider struct {
-        slippytiles.Provider
-	config	slippytiles.Config
-	cache slippytiles.Cache
+	slippytiles.Provider
+	config slippytiles.Config
+	cache  slippytiles.Cache
 }
 
-func NewProxyProvider(config slippytiles.Config) (*ProxyProvider, error){
+func NewProxyProvider(config slippytiles.Config) (*ProxyProvider, error) {
 
-     cache, err := cache.NewCacheFromConfig(config)
+	cache, err := cache.NewCacheFromConfig(config)
 
-     if err != nil {
-     	return nil, err
-     }
-     
-     p := ProxyProvider{
-       config: config,
-       cache: cache,
-     }
+	if err != nil {
+		return nil, err
+	}
 
-     return &p, nil
-}
+	p := ProxyProvider{
+		config: config,
+		cache:  cache,
+	}
 
-func (p ProxyProvider) Template() (*uritemplates.UriTemplate, error) {
-	template, err := uritemplates.Parse(p.config.Layers.URL)
-	return template, err
+	return &p, nil
 }
 
 func (p ProxyProvider) Cache() slippytiles.Cache {
-     return p.cache
+	return p.cache
 }
 
 func (p ProxyProvider) Handler() http.Handler {
 
-     re, _ := regexp.Compile(`/(.*)/(\d+)/(\d+)/(\d+).(\w+)$`)
-	
-     fn := func(rsp http.ResponseWriter, req *http.Request){
-     
+	re, _ := regexp.Compile(`/(.*)/(\d+)/(\d+)/(\d+).(\w+)$`)
+
+	fn := func(rsp http.ResponseWriter, req *http.Request) {
+
 		url := req.URL
 		path := url.Path
 		query := url.RawQuery
@@ -58,34 +52,34 @@ func (p ProxyProvider) Handler() http.Handler {
 		}
 
 		/*
-		if !*refresh {
+			if !*refresh {
 
-		   	cache := p.Cache()
-			body, err := cache.Get(path)
+			   	cache := p.Cache()
+				body, err := cache.Get(path)
 
-			if err == nil {
+				if err == nil {
 
-				if *cors {
-				   rsp.Header().Set("Access-Control-Allow-Origin", "*")
+					if *cors {
+					   rsp.Header().Set("Access-Control-Allow-Origin", "*")
+					}
+
+					rsp.Write(body)
+					return
 				}
-
-				rsp.Write(body)
-				return
 			}
-		}
 		*/
-		
-		m := re.FindStringSubmatch(path)
-		layer := m[1]
 
-		provider, ok := p.config.Layers[layer]
+		m := re.FindStringSubmatch(path)
+		layer_name := m[1]
+
+		layer, ok := p.config.Layers[layer_name]
 
 		if !ok {
 			http.Error(rsp, "404 Not found", http.StatusNotFound)
 			return
 		}
 
-		template, err := p.Template()
+		template, err := layer.URITemplate()
 
 		if err != nil {
 			http.Error(rsp, "500 Server Error", http.StatusInternalServerError)
@@ -97,12 +91,12 @@ func (p ProxyProvider) Handler() http.Handler {
 		values["x"] = m[3]
 		values["y"] = m[4]
 
-		if len(provider.config.Formats) >= 1 {
+		if len(layer.Formats) >= 1 {
 
 			format := m[5]
 			ok := false
 
-			for _, f := range provider.Formats {
+			for _, f := range layer.Formats {
 				if format == f {
 					ok = true
 					break
@@ -146,7 +140,7 @@ func (p ProxyProvider) Handler() http.Handler {
 		}
 
 		if r.StatusCode == 200 {
-		   	cache := p.Cache()
+			cache := p.Cache()
 			go cache.Set(path, body)
 		}
 

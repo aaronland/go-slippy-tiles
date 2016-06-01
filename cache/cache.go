@@ -1,7 +1,7 @@
 package cache
 
 import (
-       "errors"
+	"errors"
 	"github.com/thisisaaronland/go-slippy-tiles"
 )
 

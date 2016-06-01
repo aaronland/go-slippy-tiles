@@ -31,3 +31,7 @@ vendor: rmdeps deps
 
 fmt:
 	go fmt cmd/*.go
+	go fmt cache/*.go
+	go fmt provider/*.go
+	go fmt *.go
+

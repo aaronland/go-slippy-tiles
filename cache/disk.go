@@ -1,82 +1,81 @@
 package cache
 
 import (
-       "github.com/thisisaaronland/go-slippy-tiles"
-       "io/ioutil"
-       "os"
-       "path"
-       "path/filepath"
+	"github.com/thisisaaronland/go-slippy-tiles"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
 )
 
 type DiskCache struct {
-     slippytiles.Cache
-     root string
+	slippytiles.Cache
+	root string
 }
 
 func NewDiskCache(config slippytiles.Config) (*DiskCache, error) {
 
-     root := config.Cache.Path
-     _, err := os.Stat(root)
+	root := config.Cache.Path
+	_, err := os.Stat(root)
 
-     if os.IsNotExist(err) {
-     	return nil, err
-     }
-     
-     c := DiskCache{
-       root: root,
-     }
+	if os.IsNotExist(err) {
+		return nil, err
+	}
 
-     return &c, nil
+	c := DiskCache{
+		root: root,
+	}
+
+	return &c, nil
 }
 
 func (c *DiskCache) Get(rel_path string) ([]byte, error) {
 
-     abs_path := path.Join(c.root, rel_path)
+	abs_path := path.Join(c.root, rel_path)
 
-     _, err := os.Stat(abs_path)
+	_, err := os.Stat(abs_path)
 
-     if os.IsNotExist(err) {
-     	return nil, err
-     }
+	if os.IsNotExist(err) {
+		return nil, err
+	}
 
-     return ioutil.ReadFile(abs_path)
+	return ioutil.ReadFile(abs_path)
 }
-
 
 func (c *DiskCache) Set(rel_path string, body []byte) error {
 
-     abs_path := path.Join(c.root, rel_path)
+	abs_path := path.Join(c.root, rel_path)
 
-     root := filepath.Dir(abs_path)
+	root := filepath.Dir(abs_path)
 
-     _, err := os.Stat(root)
+	_, err := os.Stat(root)
 
-     if os.IsNotExist(err) {
-     	os.MkdirAll(root, 0755)
-     }
+	if os.IsNotExist(err) {
+		os.MkdirAll(root, 0755)
+	}
 
-     fh, err := os.Create(abs_path)
+	fh, err := os.Create(abs_path)
 
-     if err != nil {
-     	return err
-     }
+	if err != nil {
+		return err
+	}
 
-     defer fh.Close()
-     fh.Write(body)
-     fh.Sync()
+	defer fh.Close()
+	fh.Write(body)
+	fh.Sync()
 
-     return nil
+	return nil
 }
 
 func (c *DiskCache) Unset(rel_path string) error {
 
-     abs_path := path.Join(c.root, rel_path)
+	abs_path := path.Join(c.root, rel_path)
 
-     _, err := os.Stat(abs_path)
+	_, err := os.Stat(abs_path)
 
-     if os.IsNotExist(err) {
-     	return nil
-     }
+	if os.IsNotExist(err) {
+		return nil
+	}
 
-     return os.Remove(abs_path)
-}     
+	return os.Remove(abs_path)
+}
