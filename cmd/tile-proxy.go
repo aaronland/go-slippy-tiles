@@ -6,8 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/thisisaaronland/go-slippy-tiles"
-	"github.com/thisisaaronland/go-slippy-tiles/providers"
-	"github.com/thisisaaronland/go-slippy-tiles/caches"	
+	"github.com/thisisaaronland/go-slippy-tiles/provider"
+	"github.com/thisisaaronland/go-slippy-tiles/cache"	
 	"github.com/whosonfirst/go-httpony/tls"	
 	"net/http"
 	"os"
@@ -38,17 +38,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	/*
-	_, err = os.Stat(cache.Path)
-
-	if os.IsNotExist(err) {
-		err = errors.New("invalid cache path")
-		panic(err)
-	}
-	*/
 	
-	provider, err := providers.NewProxyProvider(config)
+	provider, err := provider.NewProxyProvider(config)
 
 	if err != nil {
 	   panic(err)

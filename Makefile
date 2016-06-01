@@ -6,11 +6,11 @@ prep:
 
 self:	prep
 	if test -d src/github.com/thisisaaronland/go-slippy-tiles; then rm -rf src/github.com/thisisaaronland/go-slippy-tiles; fi
-	mkdir -p src/github.com/thisisaaronland/go-slippy-tiles/providers
-	mkdir -p src/github.com/thisisaaronland/go-slippy-tiles/caches
+	mkdir -p src/github.com/thisisaaronland/go-slippy-tiles/provider
+	mkdir -p src/github.com/thisisaaronland/go-slippy-tiles/cache
 	cp slippytiles.go src/github.com/thisisaaronland/go-slippy-tiles/
-	cp providers/*.go src/github.com/thisisaaronland/go-slippy-tiles/providers/
-	cp caches/*.go src/github.com/thisisaaronland/go-slippy-tiles/caches/
+	cp provider/*.go src/github.com/thisisaaronland/go-slippy-tiles/provider/
+	cp cache/*.go src/github.com/thisisaaronland/go-slippy-tiles/cache/
 
 rmdeps:
 	if test -d src; then rm -rf src; fi 

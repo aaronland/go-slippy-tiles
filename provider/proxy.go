@@ -1,10 +1,10 @@
-package providers
+package provider
 
 import (
        "fmt"
        "github.com/jtacoma/uritemplates"
        "github.com/thisisaaronland/go-slippy-tiles"
-       "github.com/thisisaaronland/go-slippy-tiles/caches"
+       "github.com/thisisaaronland/go-slippy-tiles/cache"
        "io"
        "io/ioutil"
        "net/http"
@@ -19,7 +19,7 @@ type ProxyProvider struct {
 
 func NewProxyProvider(config slippytiles.Config) (*ProxyProvider, error){
 
-     cache, err := caches.NewCacheFromConfig(config)
+     cache, err := cache.NewCacheFromConfig(config)
 
      if err != nil {
      	return nil, err
