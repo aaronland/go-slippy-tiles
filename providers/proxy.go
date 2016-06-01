@@ -43,7 +43,7 @@ func (p ProxyProvider) Handler() http.Handler {
 
 		if !*refresh {
 
-			body, err := p.Cache.Fetch(path)
+			body, err := p.Cache.Get(path)
 
 			if err == nil {
 
@@ -127,7 +127,7 @@ func (p ProxyProvider) Handler() http.Handler {
 		}
 
 		if r.StatusCode == 200 {
-			go p.Cache.Write(path, body)
+			go p.Cache.Set(path, body)
 		}
 
 		if *cors {

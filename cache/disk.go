@@ -12,8 +12,19 @@ type DiskCache struct {
      root string
 }
 
-func NewDiskCache(root string) DiskCache {
-     return DiskCache{root: root}
+func NewDiskCache(root string) (DiskCache, error) {
+
+     _, err := os.Stat(root)
+
+     if os.IsNotExist(err) {
+     	return nil, err
+     }
+     
+     c := DiskCache{
+       root: root,
+     }
+
+     return c, nil
 }
 
 func (c DiskCache) Get(path string, body []byte) error {
@@ -54,3 +65,16 @@ func (c DiskCache) Set(path string, body []byte) error {
 
      return nil
 }
+
+func (c DiskCache) Unset(path string) error {
+
+     abs_path := path.Join(c.root, path)
+
+     _, err := os.Stat(abs_path)
+
+     if os.IsNotExist(err) {
+     	return nil
+     }
+
+     return os.Remove(abs_path)
+}     
