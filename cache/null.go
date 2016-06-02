@@ -9,7 +9,7 @@ type NullCache struct {
 	slippytiles.Cache
 }
 
-func NewNullCache(config slippytiles.Config) (*NullCache, error) {
+func NewNullCache(config *slippytiles.Config) (*NullCache, error) {
 
 	c := NullCache{}
 

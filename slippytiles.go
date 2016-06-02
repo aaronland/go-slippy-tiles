@@ -1,7 +1,9 @@
 package slippytiles
 
 import (
+	"encoding/json"
 	"github.com/jtacoma/uritemplates"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -36,4 +38,22 @@ type Cache interface {
 type Provider interface {
 	Handler() http.Handler
 	Cache() Cache
+}
+
+func NewConfigFromFile(file string) (*Config, error) {
+
+	body, err := ioutil.ReadFile(file)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c := Config{}
+	err = json.Unmarshal(body, &c)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }

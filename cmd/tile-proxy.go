@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/thisisaaronland/go-slippy-tiles"
 	"github.com/thisisaaronland/go-slippy-tiles/provider"
 	"github.com/whosonfirst/go-httpony/cors"
 	"github.com/whosonfirst/go-httpony/tls"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -26,14 +24,7 @@ func main() {
 
 	flag.Parse()
 
-	body, err := ioutil.ReadFile(*cfg)
-
-	if err != nil {
-		panic(err)
-	}
-
-	config := slippytiles.Config{}
-	err = json.Unmarshal(body, &config)
+	config, err := slippytiles.NewConfigFromFile(*cfg)
 
 	if err != nil {
 		panic(err)

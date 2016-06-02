@@ -5,7 +5,7 @@ import (
 	"github.com/thisisaaronland/go-slippy-tiles"
 )
 
-func NewCacheFromConfig(config slippytiles.Config) (slippytiles.Cache, error) {
+func NewCacheFromConfig(config *slippytiles.Config) (slippytiles.Cache, error) {
 
 	if config.Cache.Name != "Disk" {
 		err := errors.New("unsupported cache type")

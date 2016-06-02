@@ -11,11 +11,11 @@ import (
 
 type ProxyProvider struct {
 	slippytiles.Provider
-	config slippytiles.Config
+	config *slippytiles.Config
 	cache  slippytiles.Cache
 }
 
-func NewProxyProvider(config slippytiles.Config) (*ProxyProvider, error) {
+func NewProxyProvider(config *slippytiles.Config) (*ProxyProvider, error) {
 
 	cache, err := cache.NewCacheFromConfig(config)
 

@@ -4,7 +4,7 @@ import (
 	"github.com/thisisaaronland/go-slippy-tiles"
 )
 
-func NewProviderFromConfig(config slippytiles.Config) (slippytiles.Provider, error) {
+func NewProviderFromConfig(config *slippytiles.Config) (slippytiles.Provider, error) {
 
 	/*
 		if config.Cache.Name != "Disk" {
