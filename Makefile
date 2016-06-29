@@ -27,7 +27,7 @@ bin:	self
 vendor: rmdeps deps
 	if test -d vendor/src; then rm -rf vendor/src; fi
 	cp -r src vendor/src
-	find vendor -name '.git' -print -type d -exec rm -rf {} +
+	# 	find vendor -name '.git' -print -type d -exec rm -rf {} +
 
 fmt:
 	go fmt cmd/*.go

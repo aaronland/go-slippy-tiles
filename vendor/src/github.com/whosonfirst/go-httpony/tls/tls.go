@@ -56,7 +56,7 @@ func GenerateTLSCert(host string, root string) (string, string, error) {
 	}
 
 	root = path.Join(root, host)
-	
+
 	cert_path := path.Join(root, "cert.pem")
 	key_path := path.Join(root, "key.pem")
 

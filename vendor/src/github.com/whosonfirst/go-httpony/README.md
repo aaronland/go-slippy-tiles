@@ -4,6 +4,49 @@ Utility functions for HTTP ponies written in Go.
 
 ## Usage
 
+### Crypto
+
+```
+package main
+
+import (
+	"flag"
+	"fmt"
+	"github.com/whosonfirst/go-httpony/crypto"
+)
+
+func main() {
+
+	var key = flag.String("key", "jwPsjM9rfZl73Pt0XURf0t9u8h5ZOpNT", "The key to encrypt and decrypt your text")
+
+	flag.Parse()
+
+	for _, text := range flag.Args() {
+
+		c, err := crypto.NewCrypt(*key)
+
+		if err != nil {
+			panic(err)
+		}
+
+		enc, err := c.Encrypt(text)
+
+		if err != nil {
+			panic(err)
+		}
+
+		plain, err := c.Decrypt(enc)
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(text, enc, plain)
+	}
+
+}
+```
+
 ### TLS
 
 ```
