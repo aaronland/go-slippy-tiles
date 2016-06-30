@@ -36,14 +36,7 @@ func main() {
 		panic(err)
 	}
 
-	fn := func(rsp http.ResponseWriter, req *http.Request) {
-		http.Error(rsp, "404 Not found", http.StatusNotFound)
-		return
-	}
-
-	giveup_handler := http.HandlerFunc(fn)
-
-	proxy_handler := proxy_provider.Handler(giveup_handler)
+	proxy_handler := proxy_provider.Handler(http.NotFoundHandler())
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
 
