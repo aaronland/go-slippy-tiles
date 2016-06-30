@@ -30,15 +30,24 @@ func main() {
 		panic(err)
 	}
 
-	provider, err := provider.NewProviderFromConfig(config)
+	proxy_provider, err := provider.NewProviderFromConfig(config)
 
 	if err != nil {
 		panic(err)
 	}
 
+	fn := func(rsp http.ResponseWriter, req *http.Request) {
+		http.Error(rsp, "404 Not found", http.StatusNotFound)
+		return
+	}
+
+	giveup_handler := http.HandlerFunc(fn)
+
+	proxy_handler := proxy_provider.Handler(giveup_handler)
+
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
 
-	handler := cors.EnsureCORSHandler(provider.Handler(), *cors_enable, *cors_allow)
+	handler := cors.EnsureCORSHandler(proxy_handler, *cors_enable, *cors_allow)
 
 	if *tls_enable {
 

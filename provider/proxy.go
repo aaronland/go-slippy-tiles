@@ -5,6 +5,7 @@ import (
 	"github.com/thisisaaronland/go-slippy-tiles/cache"
 	"io"
 	"io/ioutil"
+	_ "log"
 	"net/http"
 	"regexp"
 )
@@ -51,7 +52,6 @@ func (p ProxyProvider) Handler(next http.Handler) http.Handler {
 			body, err := cache.Get(path)
 
 			if err == nil {
-
 				rsp.Write(body)
 				return
 			}
@@ -129,7 +129,7 @@ func (p ProxyProvider) Handler(next http.Handler) http.Handler {
 				go cache.Set(path, body)
 			}
 
-			rsp.Header().Set("Access-Control-Allow-Origin", "*")
+			// log.Println("return from source", path)
 
 			rsp.Write(body)
 			return
