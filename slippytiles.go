@@ -36,7 +36,7 @@ type Cache interface {
 }
 
 type Provider interface {
-	Handler() http.Handler
+	Handler(http.Handler) http.Handler
 	Cache() Cache
 }
 
