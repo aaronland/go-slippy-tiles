@@ -37,11 +37,10 @@ func main() {
 	}
 
 	proxy_handler := proxy_provider.Handler(http.NotFoundHandler())
-
-	endpoint := fmt.Sprintf("%s:%d", *host, *port)
-
 	handler := cors.EnsureCORSHandler(proxy_handler, *cors_enable, *cors_allow)
 
+	endpoint := fmt.Sprintf("%s:%d", *host, *port)
+	
 	if *tls_enable {
 
 		var cert string
