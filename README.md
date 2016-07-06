@@ -1,6 +1,14 @@
 # go-tile-proxy
 
-Too soon.
+What is the simplest TMS tile proxy?
+
+## Install
+
+```
+make build
+```
+
+_See note below about installing [dependencies](#dependencies)._
 
 ## Usage
 
@@ -42,6 +50,24 @@ var url = cfg.url.replace('https://vector.mapzen.com', 'http://localhost:9191');
 cfg.url = url;
 s.setDataSource('osm', cfg);
 ```
+
+## Dependencies
+
+### Vendoring
+
+Vendoring has been disabled for the time being because when trying to load this package as a vendored dependency in _another_ package it all goes pear-shape with errors like this:
+
+```
+make deps
+# cd /Users/local/mapzen/mapzen-slippy-map/www-server/vendor/src/github.com/whosonfirst/go-httpony; git submodule update --init --recursive
+fatal: no submodule mapping found in .gitmodules for path 'vendor/src/golang.org/x/net'
+package github.com/whosonfirst/go-httpony: exit status 128
+make: *** [deps] Error 1
+```
+
+_Note that's the actual error. It is copy-pasted from a different package with a similar issue. The problem is the same fot this package but always seems to involve something in `github.com/jtacoma/uritemplates`._
+
+I have no idea and would welcome suggestions...
 
 ## See also
 

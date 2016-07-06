@@ -22,7 +22,7 @@ deps:
 	@GOPATH=$(GOPATH) go get -u "github.com/jtacoma/uritemplates"
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-httpony"
 
-bin:	self
+bin:	self fmt
 	@GOPATH=$(GOPATH) go build -o bin/tile-proxy cmd/tile-proxy.go
 
 fmt:
