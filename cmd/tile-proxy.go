@@ -40,7 +40,7 @@ func main() {
 	handler := cors.EnsureCORSHandler(proxy_handler, *cors_enable, *cors_allow)
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
-	
+
 	if *tls_enable {
 
 		var cert string
